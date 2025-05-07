@@ -17,10 +17,10 @@ os.environ["CUDA_VISIBLE_DEVICES"] = str(args.device_id)
 from ui.components import create_main_demo_ui
 from pipeline_ace_step import ACEStepPipeline
 from data_sampler import DataSampler
+import requests
 
 
 def main(args):
-
     model_demo = ACEStepPipeline(
         checkpoint_dir=args.checkpoint_path,
         dtype="bfloat16" if args.bf16 else "float32",
@@ -28,8 +28,15 @@ def main(args):
     )
     data_sampler = DataSampler()
 
+    def text2music(*args, **kwargs):
+        try:
+            requests.post("http://authproxy:7860/acestep/join", timeout=600)
+            return model_demo(*args, **kwargs)
+        finally:
+            requests.post("http://authproxy:7860/acestep/leave", timeout=5)
+
     demo = create_main_demo_ui(
-        text2music_process_func=model_demo.__call__,
+        text2music_process_func=text2music,
         sample_data_func=data_sampler.sample,
     )
     demo.launch(

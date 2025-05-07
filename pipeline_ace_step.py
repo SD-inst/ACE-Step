@@ -2,6 +2,7 @@ import random
 import time
 import os
 import re
+import requests
 
 import torch
 import torch.nn as nn
@@ -170,6 +171,16 @@ class ACEStepPipeline:
             self.music_dcae = torch.compile(self.music_dcae)
             self.ace_step_transformer = torch.compile(self.ace_step_transformer)
             self.text_encoder_model = torch.compile(self.text_encoder_model)
+
+    def unload(self):
+        self.music_dcae = None
+        self.ace_step_transformer = None
+        self.text_encoder_model = None
+        self.text_tokenizer = None
+        self.lyric_tokenizer = None
+        self.loaded = False
+        torch.cuda.empty_cache()
+        torch.cuda.ipc_collect()
 
     def get_text_embeddings(self, texts, device, text_max_length=256):
         inputs = self.text_tokenizer(texts, return_tensors="pt", padding=True, truncation=True, max_length=text_max_length)
@@ -517,7 +528,9 @@ class ACEStepPipeline:
                 prev_sample = xt_tar + (t_im1 - t_i) * Vt_tar
                 prev_sample = prev_sample.to(dtype) 
                 xt_tar = prev_sample
-        
+            progress = {"value": i, "max": T_steps, "prompt_id": "task", "queue": 1}
+            requests.post("http://authproxy:7860/cui/progress", json=progress, timeout=2)
+
         target_latents = zt_edit if xt_tar is None else xt_tar
         return target_latents
 
@@ -910,6 +923,9 @@ class ACEStepPipeline:
             else:
                 target_latents = scheduler.step(model_output=noise_pred, timestep=t, sample=target_latents, return_dict=False, omega=omega_scale)[0]
 
+            progress = {"value": i, "max": num_inference_steps, "prompt_id": "task", "queue": 1}
+            requests.post("http://authproxy:7860/cui/progress", json=progress, timeout=2)
+
         if is_extend:
             if to_right_pad_gt_latents is not None:
                 target_latents = torch.cat([target_latents, to_right_pad_gt_latents], dim=-1)
@@ -1175,4 +1191,5 @@ class ACEStepPipeline:
             with open(input_params_json_save_path, "w", encoding="utf-8") as f:
                 json.dump(input_params_json, f, indent=4, ensure_ascii=False)
 
+        self.unload()
         return output_paths + [input_params_json]
