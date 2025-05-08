@@ -9,9 +9,10 @@ Apache 2.0 License
 import os
 import click
 
-from acestep.ui.components import create_main_demo_ui
-from acestep.pipeline_ace_step import ACEStepPipeline
-from acestep.data_sampler import DataSampler
+from ui.components import create_main_demo_ui
+from pipeline_ace_step import ACEStepPipeline
+from data_sampler import DataSampler
+import requests
 
 
 @click.command()
@@ -60,8 +61,15 @@ def main(checkpoint_path, server_name, port, device_id, share, bf16, torch_compi
     )
     data_sampler = DataSampler()
 
+    def text2music(*args, **kwargs):
+        try:
+            requests.post("http://authproxy:7860/acestep/join", timeout=600)
+            return model_demo(*args, **kwargs)
+        finally:
+            requests.post("http://authproxy:7860/acestep/leave", timeout=5)
+
     demo = create_main_demo_ui(
-        text2music_process_func=model_demo.__call__,
+        text2music_process_func=text2music,
         sample_data_func=data_sampler.sample,
     )
     demo.launch(server_name=server_name, server_port=port, share=share)
