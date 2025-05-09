@@ -21,10 +21,10 @@ import math
 from huggingface_hub import hf_hub_download
 
 # from diffusers.pipelines.pipeline_utils import DiffusionPipeline
-from .schedulers.scheduling_flow_match_euler_discrete import (
+from acestep.schedulers.scheduling_flow_match_euler_discrete import (
     FlowMatchEulerDiscreteScheduler,
 )
-from .schedulers.scheduling_flow_match_heun_discrete import (
+from acestep.schedulers.scheduling_flow_match_heun_discrete import (
     FlowMatchHeunDiscreteScheduler,
 )
 from diffusers.pipelines.stable_diffusion_3.pipeline_stable_diffusion_3 import (
@@ -33,11 +33,11 @@ from diffusers.pipelines.stable_diffusion_3.pipeline_stable_diffusion_3 import (
 from diffusers.utils.torch_utils import randn_tensor
 from transformers import UMT5EncoderModel, AutoTokenizer
 
-from .language_segmentation import LangSegment
-from .music_dcae.music_dcae_pipeline import MusicDCAE
-from .models.ace_step_transformer import ACEStepTransformer2DModel
-from .models.lyrics_utils.lyric_tokenizer import VoiceBpeTokenizer
-from .apg_guidance import (
+from acestep.language_segmentation import LangSegment
+from acestep.music_dcae.music_dcae_pipeline import MusicDCAE
+from acestep.models.ace_step_transformer import ACEStepTransformer2DModel
+from acestep.models.lyrics_utils.lyric_tokenizer import VoiceBpeTokenizer
+from acestep.apg_guidance import (
     apg_forward,
     MomentumBuffer,
     cfg_forward,
@@ -45,7 +45,7 @@ from .apg_guidance import (
     cfg_double_condition_forward,
 )
 import torchaudio
-from .cpu_offload import cpu_offload
+from acestep.cpu_offload import cpu_offload
 
 
 torch.backends.cudnn.benchmark = False

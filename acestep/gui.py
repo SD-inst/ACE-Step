@@ -9,9 +9,9 @@ Apache 2.0 License
 import os
 import click
 
-from ui.components import create_main_demo_ui
-from pipeline_ace_step import ACEStepPipeline
-from data_sampler import DataSampler
+from .ui.components import create_main_demo_ui
+from .pipeline_ace_step import ACEStepPipeline
+from .data_sampler import DataSampler
 import requests
 
 
