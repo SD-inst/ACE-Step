@@ -84,6 +84,7 @@ def create_text2music_ui(
                     info="-1 means random duration (30 ~ 240).",
                     scale=9,
                 )
+                format = gr.Dropdown(choices=["mp3", "ogg", "flac", "wav"], value="mp3", label="Format")
                 sample_bnt = gr.Button("Sample", variant="primary", scale=1)
 
             prompt = gr.Textbox(
@@ -235,6 +236,7 @@ def create_text2music_ui(
 
                 def retake_process_func(json_data, retake_variance, retake_seeds):
                     return text2music_process_func(
+                        format,
                         json_data["audio_duration"],
                         json_data["prompt"],
                         json_data["lyrics"],
@@ -361,6 +363,7 @@ def create_text2music_ui(
                         src_audio_path = json_data["audio_path"]
 
                     return text2music_process_func(
+                        format,
                         json_data["audio_duration"],
                         prompt,
                         lyrics,
@@ -532,6 +535,7 @@ def create_text2music_ui(
                         edit_lyrics = lyrics
 
                     return text2music_process_func(
+                        format,
                         json_data["audio_duration"],
                         prompt,
                         lyrics,
@@ -676,6 +680,7 @@ def create_text2music_ui(
                     repaint_start = -left_extend_length
                     repaint_end = json_data["audio_duration"] + right_extend_length
                     return text2music_process_func(
+                        format,
                         json_data["audio_duration"],
                         prompt,
                         lyrics,
@@ -791,6 +796,7 @@ def create_text2music_ui(
     text2music_bnt.click(
         fn=text2music_process_func,
         inputs=[
+            format,
             audio_duration,
             prompt,
             lyrics,
@@ -808,7 +814,7 @@ def create_text2music_ui(
             use_erg_diffusion,
             oss_steps,
             guidance_scale_text,
-            guidance_scale_lyric,
+            guidance_scale_lyric
         ],
         outputs=outputs + [input_params_json],
     )
