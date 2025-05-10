@@ -1667,6 +1667,7 @@ class ACEStepPipeline:
         }
 
         input_params_json = {
+            "format": format,
             "task": task,
             "prompt": prompt if task != "edit" else edit_target_prompt,
             "lyrics": lyrics if task != "edit" else edit_target_lyrics,
