@@ -390,7 +390,7 @@ def create_text2music_ui(
                         src_audio_path = json_data["audio_path"]
 
                     return text2music_process_func(
-                        json_data["format"],
+                        format.value,
                         json_data["audio_duration"],
                         prompt,
                         lyrics,
@@ -563,7 +563,7 @@ def create_text2music_ui(
                         edit_lyrics = lyrics
 
                     return text2music_process_func(
-                        json_data["format"],
+                        format.value,
                         json_data["audio_duration"],
                         prompt,
                         lyrics,
@@ -709,7 +709,7 @@ def create_text2music_ui(
                     repaint_start = -left_extend_length
                     repaint_end = json_data["audio_duration"] + right_extend_length
                     return text2music_process_func(
-                        json_data["format"],
+                        format.value,
                         json_data["audio_duration"],
                         prompt,
                         lyrics,
