@@ -9,11 +9,7 @@ Apache 2.0 License
 import os
 import click
 
-from .ui.components import create_main_demo_ui
-from .pipeline_ace_step import ACEStepPipeline
-from .data_sampler import DataSampler
 import requests
-
 
 @click.command()
 @click.option(
@@ -59,6 +55,10 @@ def main(checkpoint_path, server_name, port, device_id, share, bf16, torch_compi
     """
 
     os.environ["CUDA_VISIBLE_DEVICES"] = str(device_id)
+
+    from acestep.ui.components import create_main_demo_ui
+    from acestep.pipeline_ace_step import ACEStepPipeline
+    from acestep.data_sampler import DataSampler
 
     model_demo = ACEStepPipeline(
         checkpoint_dir=checkpoint_path,

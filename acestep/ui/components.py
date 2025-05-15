@@ -94,9 +94,12 @@ def create_text2music_ui(
 ):
 
     with gr.Row(equal_height=True):
-        curr_file_dir = os.path.dirname(__file__)
-        output_file_dir = os.path.join(curr_file_dir, "..", "..", "outputs")
-        os.makedirs(output_file_dir, exist_ok=True)
+        # Get base output directory from environment variable, defaulting to CWD-relative 'outputs'.
+        # This default (./outputs) is suitable for non-Docker local development.
+        # For Docker, the ACE_OUTPUT_DIR environment variable should be set (e.g., to /app/outputs).
+        output_file_dir = os.environ.get("ACE_OUTPUT_DIR", "./outputs")
+        if not os.path.isdir(output_file_dir):
+            os.makedirs(output_file_dir, exist_ok=True)
         json_files = [f for f in os.listdir(output_file_dir) if f.endswith('.json')]
         json_files.sort(reverse=True, key=lambda x: int(x.split('_')[1]))
         output_files = gr.Dropdown(choices=json_files, label="Select previous generated input params", scale=9, interactive=True)
@@ -231,11 +234,11 @@ def create_text2music_ui(
 
             with gr.Accordion("Advanced Settings", open=False):
                 scheduler_type = gr.Radio(
-                    ["euler", "heun"],
-                    value="euler",
+                    ["euler", "heun", "pingpong"],
+                    value="pingpong",
                     label="Scheduler Type",
                     elem_id="scheduler_type",
-                    info="Scheduler type for the generation. euler is recommended. heun will take more time.",
+                    info="Scheduler type for the generation. pingpong is recommended. heun will take more time.",
                 )
                 cfg_type = gr.Radio(
                     ["cfg", "apg", "cfg_star"],
@@ -907,7 +910,8 @@ def create_text2music_ui(
         )
 
         def load_data(json_file):
-            json_file = os.path.join(output_file_dir, json_file)
+            if isinstance(output_file_dir, str):
+                json_file = os.path.join(output_file_dir, json_file)
             json_data = load_data_func(json_file)
             return json2output(json_data)
 
