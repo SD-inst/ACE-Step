@@ -986,7 +986,6 @@ class ACEStepPipeline:
 
         bsz = gt_latents.shape[0]
         device = gt_latents.device
-        noisy_image = gt_latents * (1 - sigma_max) + noise * sigma_max
         if scheduler_type == "euler":
             scheduler = FlowMatchEulerDiscreteScheduler(
                 num_train_timesteps=1000,
@@ -1013,6 +1012,7 @@ class ACEStepPipeline:
             device=device,
             timesteps=None,
         )
+        noisy_image = gt_latents * (1 - scheduler.sigma_max) + noise * scheduler.sigma_max
         logger.info(f"{scheduler.sigma_min=} {scheduler.sigma_max=} {timesteps=} {num_inference_steps=}")
         return noisy_image, timesteps, scheduler, num_inference_steps
 
