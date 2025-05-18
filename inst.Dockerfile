@@ -6,7 +6,7 @@ USER 1000:1000
 WORKDIR /app
 COPY requirements.txt /app/
 RUN --mount=type=cache,target=/home/user/.cache pip install -r /app/requirements.txt
-COPY . /app
+COPY --chown=1000:1000 . /app
 RUN --mount=type=cache,target=/home/user/.cache pip install -e .
 ENTRYPOINT ["/home/user/.local/bin/acestep"]
 CMD ["--server_name", "0.0.0.0"]
