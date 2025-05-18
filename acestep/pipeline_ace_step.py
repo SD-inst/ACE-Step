@@ -144,6 +144,7 @@ class ACEStepPipeline:
         self.text_tokenizer = None
         self.lyric_tokenizer = None
         self.loaded = False
+        self.lora_path = None
         torch.cuda.empty_cache()
         torch.cuda.ipc_collect()
 
