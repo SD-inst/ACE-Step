@@ -1,4 +1,5 @@
-checkpoints
-venv
-outputs
-datasets
+/checkpoints
+/venv
+/outputs
+/datasets
+/ace-step-lora
