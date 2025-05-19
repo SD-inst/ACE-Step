@@ -34,6 +34,7 @@ from diffusers.pipelines.stable_diffusion_3.pipeline_stable_diffusion_3 import (
     retrieve_timesteps,
 )
 from diffusers.utils.torch_utils import randn_tensor
+from diffusers.utils.peft_utils import set_weights_and_activate_adapters
 from transformers import UMT5EncoderModel, AutoTokenizer
 
 from acestep.language_segmentation import LangSegment, language_filters
@@ -139,18 +140,18 @@ class ACEStepPipeline:
         self.cpu_offload = cpu_offload
         self.quantized = quantized
         self.overlapped_decode = overlapped_decode
-        
+
     def cleanup_memory(self):
         """Clean up GPU and CPU memory to prevent VRAM overflow during multiple generations."""
         # Clear CUDA cache
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
-            
+
             # Log memory usage if in verbose mode
             allocated = torch.cuda.memory_allocated() / (1024 ** 3)
             reserved = torch.cuda.memory_reserved() / (1024 ** 3)
             logger.info(f"GPU Memory: {allocated:.2f}GB allocated, {reserved:.2f}GB reserved")
-        
+
         # Collect Python garbage
         import gc
         gc.collect()
@@ -1428,7 +1429,7 @@ class ACEStepPipeline:
         latents, _ = self.music_dcae.encode(input_audio, sr=sr)
         return latents
 
-    def load_lora(self, lora_name_or_path):
+    def load_lora(self, lora_name_or_path, lora_weight):
         if lora_name_or_path != self.lora_path and lora_name_or_path != "none":
             if not os.path.exists(lora_name_or_path):
                 lora_download_path = snapshot_download(lora_name_or_path, cache_dir=self.checkpoint_dir)
@@ -1436,8 +1437,9 @@ class ACEStepPipeline:
                 lora_download_path = lora_name_or_path
             if self.lora_path != "none":
                 self.ace_step_transformer.unload_lora()
-            self.ace_step_transformer.load_lora_adapter(os.path.join(lora_download_path, "pytorch_lora_weights.safetensors"), adapter_name="zh_rap_lora", with_alpha=True, prefix=None)
+            self.ace_step_transformer.load_lora_adapter(os.path.join(lora_download_path, "pytorch_lora_weights.safetensors"), adapter_name="ace_step_lora", with_alpha=True, prefix=None)
             logger.info(f"Loading lora weights from: {lora_name_or_path} download path is: {lora_download_path}")
+            set_weights_and_activate_adapters(self.ace_step_transformer,["ace_step_lora"], [lora_weight])
             self.lora_path = lora_name_or_path
         elif self.lora_path != "none" and lora_name_or_path == "none":
             logger.info("No lora weights to load.")
@@ -1468,6 +1470,7 @@ class ACEStepPipeline:
         ref_audio_strength: float = 0.5,
         ref_audio_input: str = None,
         lora_name_or_path: str = "none",
+        lora_weight: float = 1.0,
         retake_seeds: list = None,
         retake_variance: float = 0.5,
         task: str = "text2music",
@@ -1496,7 +1499,7 @@ class ACEStepPipeline:
             else:
                 self.load_checkpoint(self.checkpoint_dir)
 
-        self.load_lora(lora_name_or_path)
+        self.load_lora(lora_name_or_path, lora_weight)
         load_model_cost = time.time() - start_time
         logger.info(f"Model loaded in {load_model_cost:.2f} seconds.")
 
@@ -1680,7 +1683,7 @@ class ACEStepPipeline:
             save_path=save_path,
             format=format,
         )
-        
+
         # Clean up memory after generation
         self.cleanup_memory()
 
@@ -1695,6 +1698,7 @@ class ACEStepPipeline:
         input_params_json = {
             "format": format,
             "lora_name_or_path": lora_name_or_path,
+            "lora_weight": lora_weight,
             "task": task,
             "prompt": prompt if task != "edit" else edit_target_prompt,
             "lyrics": lyrics if task != "edit" else edit_target_lyrics,
