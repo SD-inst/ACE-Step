@@ -308,6 +308,17 @@ def create_text2music_ui(
                     value=None,
                     info="Optimal Steps for the generation. But not test well",
                 )
+                increased_audio_duration = gr.Slider(
+                    0,
+                    240.0,
+                    step=0.00001,
+                    value=0,
+                    label="Increased Audio Duration",
+                    interactive=True,
+                    info="Use this with a fixed seed and main duration to make a longer song",
+                    scale=9,
+                )
+
 
             text2music_bnt = gr.Button("Generate", variant="primary")
 
@@ -983,7 +994,8 @@ def create_text2music_ui(
             ref_audio_strength,
             ref_audio_input,
             lora_name_or_path,
-            lora_weight
+            lora_weight,
+            increased_audio_duration
         ],
         outputs=outputs + [input_params_json],
     )

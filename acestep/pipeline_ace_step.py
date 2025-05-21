@@ -828,6 +828,7 @@ class ACEStepPipeline:
     def text2music_diffusion_process(
         self,
         duration,
+        increased_duration,
         encoder_text_hidden_states,
         text_attention_mask,
         speaker_embds,
@@ -905,11 +906,17 @@ class ACEStepPipeline:
             )
 
         frame_length = int(duration * 44100 / 512 / 8)
+        increased_frame_length = (
+            int(increased_duration * 44100 / 512 / 8)
+            if not add_retake_noise and increased_duration > duration
+            else 0
+        )
         if src_latents is not None:
             frame_length = src_latents.shape[-1]
-
+            increased_frame_length = 0
         if ref_latents is not None:
             frame_length = ref_latents.shape[-1]
+            increased_frame_length = 0
 
         if len(oss_steps) > 0:
             infer_steps = max(oss_steps)
@@ -948,6 +955,15 @@ class ACEStepPipeline:
             device=self.device,
             dtype=self.dtype,
         )
+        if increased_frame_length - frame_length > 0:
+            append_latents = randn_tensor(
+                shape=(bsz, 8, 16, increased_frame_length - frame_length),
+                generator=random_generators,
+                device=self.device,
+                dtype=self.dtype,
+            )
+            target_latents = torch.cat([target_latents, append_latents], dim=3)
+            frame_length = increased_frame_length
 
         is_repaint = False
         is_extend = False
@@ -1471,6 +1487,7 @@ class ACEStepPipeline:
         ref_audio_input: str = None,
         lora_name_or_path: str = "none",
         lora_weight: float = 1.0,
+        increased_audio_duration: float = 0,
         retake_seeds: list = None,
         retake_variance: float = 0.5,
         task: str = "text2music",
@@ -1642,6 +1659,7 @@ class ACEStepPipeline:
         else:
             target_latents = self.text2music_diffusion_process(
                 duration=audio_duration,
+                increased_duration=increased_audio_duration,
                 encoder_text_hidden_states=encoder_text_hidden_states,
                 text_attention_mask=text_attention_mask,
                 speaker_embds=speaker_embeds,
@@ -1703,6 +1721,7 @@ class ACEStepPipeline:
             "prompt": prompt if task != "edit" else edit_target_prompt,
             "lyrics": lyrics if task != "edit" else edit_target_lyrics,
             "audio_duration": audio_duration,
+            "increased_audio_duration": increased_audio_duration,
             "infer_step": infer_step,
             "guidance_scale": guidance_scale,
             "scheduler_type": scheduler_type,
