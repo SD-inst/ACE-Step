@@ -13,12 +13,11 @@ import re
 import requests
 
 import torch
-import torch.nn as nn
 from loguru import logger
 from tqdm import tqdm
 import json
 import math
-from huggingface_hub import hf_hub_download, snapshot_download
+from huggingface_hub import snapshot_download
 
 # from diffusers.pipelines.pipeline_utils import DiffusionPipeline
 from acestep.schedulers.scheduling_flow_match_euler_discrete import (
@@ -49,7 +48,6 @@ from acestep.apg_guidance import (
     cfg_double_condition_forward,
 )
 import torchaudio
-import librosa
 from .cpu_offload import cpu_offload
 
 
@@ -253,7 +251,7 @@ class ACEStepPipeline:
         # compile
         if self.torch_compile:
             if export_quantized_weights:
-                from torchao.quantization import (
+                from torch.ao.quantization import (
                     quantize_,
                     Int4WeightOnlyConfig,
                 )
@@ -326,7 +324,7 @@ class ACEStepPipeline:
             torch.load(
                 os.path.join(text_encoder_checkpoint_path, "pytorch_model_int4wo.bin"),
                 map_location=self.device,
-            ),assign=True
+            ), assign=True
         )
         self.text_encoder_model.torchao_quantized = True
 
@@ -718,9 +716,9 @@ class ACEStepPipeline:
                         attention_mask=attention_mask,
                         momentum_buffer=momentum_buffer,
                     )
-                    V_delta_avg += (1 / n_avg) * (Vt_tar - Vt_src) # - (hfg - 1) * (x_src)
+                    V_delta_avg += (1 / n_avg) * (Vt_tar - Vt_src)  # - (hfg - 1) * (x_src)
 
-                zt_edit = zt_edit.to(torch.float32) # arbitrary, should be settable for compatibility
+                zt_edit = zt_edit.to(torch.float32)  # arbitrary, should be settable for compatibility
                 if scheduler_type != "pingpong":
                     # propagate direct ODE
                     zt_edit = zt_edit + (t_im1 - t_i) * V_delta_avg
@@ -1074,7 +1072,7 @@ class ACEStepPipeline:
                         :,
                         :,
                         :,
-                        left_trim_length : target_latents.shape[-1] - right_trim_length,
+                        left_trim_length: target_latents.shape[-1] - right_trim_length,
                     ]
                 )
                 if right_pad_frame_length > 0:
@@ -1416,7 +1414,7 @@ class ACEStepPipeline:
     ):
         if save_path is None:
             logger.warning("save_path is None, using default path ./outputs/")
-            base_path = f"./outputs"
+            base_path = "./outputs"
             ensure_directory_exists(base_path)
             output_path_wav = (
                 f"{base_path}/output_{time.strftime('%Y%m%d%H%M%S')}_{idx}."+format
@@ -1456,7 +1454,7 @@ class ACEStepPipeline:
                 self.ace_step_transformer.unload_lora()
             self.ace_step_transformer.load_lora_adapter(os.path.join(lora_download_path, "pytorch_lora_weights.safetensors"), adapter_name="ace_step_lora", with_alpha=True, prefix=None)
             logger.info(f"Loading lora weights from: {lora_name_or_path} download path is: {lora_download_path} weight: {lora_weight}")
-            set_weights_and_activate_adapters(self.ace_step_transformer,["ace_step_lora"], [lora_weight])
+            set_weights_and_activate_adapters(self.ace_step_transformer, ["ace_step_lora"], [lora_weight])
             self.lora_path = lora_name_or_path
             self.lora_weight = lora_weight
         elif self.lora_path != "none" and lora_name_or_path == "none":
