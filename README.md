@@ -6,7 +6,7 @@
     <a href="https://modelscope.cn/models/ACE-Step/ACE-Step-v1-3.5B">ModelScope</a> |
     <a href="https://huggingface.co/spaces/ACE-Step/ACE-Step">Space Demo</a> |
     <a href="https://discord.gg/PeWDxrkdj7">Discord</a> |
-    <a href="./assets/acestep_tech_report.pdf">Technical Report</a>
+    <a href="https://arxiv.org/abs/2506.00045">Technical Report</a>
 </p>
 
 <p align="center">
@@ -32,7 +32,7 @@ Rather than building yet another end-to-end text-to-music pipeline, our vision i
 
 ## 📢 News and Updates
 
-- 📃 2025.06.02: Released [ACE-Step Technical Report (PDF)](./assets/acestep_tech_report.pdf). The arXiv version is still on hold, so we are sharing the PDF version first.
+- 📃 2025.06.02: Released [ACE-Step Technical Report (PDF)](https://arxiv.org/abs/2506.00045).
 
 - 🎮 2025.05.14: Add `Stable Audio Open Small` sampler `pingpong`. Use SDE to achieve better music consistency and quality, including lyric alignment and style alignment. Use a better method to re-implement `Audio2Audio`
 
